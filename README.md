@@ -23,8 +23,9 @@
 
 - **Python 3.7+** یا بالاتر
 - یک سیستم عامل (Windows, macOS, Linux)
+- **Git** (اختیاری، برای کلون کردن)
 
-### مراحل نصب
+### مراحل نصب سریع
 
 #### 1️⃣ مخزن را کلون کنید
 
@@ -122,7 +123,7 @@ Local_Network/
 ## 🔒 نکات امنیتی
 
 - رمزهای عبور با الگوریتم SHA-256 رمزگذاری می‌شوند
-- هر کاربر یک توکن سشن منحصر‌به‌فرد دارد
+- هر کاربر یک توکن سشن منحصر‌به‌فرد دا��د
 - عملیات حذف کاربر فقط برای مدیران دسترسی دارد
 
 ---
@@ -157,9 +158,69 @@ python --version
 
 ### ویدیو آپلود نمی‌شود
 
-- ف��مت را بررسی کنید (MP4, MKV, AVI, WebM)
+- فرمت را بررسی کنید (MP4, MKV, AVI, WebM)
 - اندازه فایل را کاهش دهید
 - اتصال اینترنت خود را بررسی کنید
+
+---
+
+## 📱 نصب و اجرا در Termux (اندروید)
+
+### 1️⃣ بروزرسانی مخازن
+
+```bash
+apt update && apt upgrade -y
+```
+
+### 2️⃣ نصب پیش‌نیازها
+
+```bash
+apt install python git nano -y
+```
+
+### 3️⃣ کلون کردن مخزن
+
+```bash
+git clone https://github.com/javadxpro/Local_Network.git
+cd Local_Network
+```
+
+### 4️⃣ اجرای سرور
+
+```bash
+python server.py
+```
+
+### 5️⃣ دسترسی از مرورگر
+
+- **محلی:** `http://localhost:5555`
+- **از سایر دستگاه‌ها:** `http://YOUR_IP:5555`
+
+### ⚡ دستور سریع (کل در یک خط)
+
+```bash
+apt update && apt upgrade -y && apt install python git nano -y && git clone https://github.com/javadxpro/Local_Network.git && cd Local_Network && python server.py
+```
+
+### 🔧 دسترسی به فایل‌ها در Termux
+
+```bash
+termux-setup-storage
+```
+
+### ❌ حل مشکلات Termux
+
+**اگر Python یافت نشد:**
+```bash
+apt install python3 -y
+python3 server.py
+```
+
+**اگر خطای Permission:**
+```bash
+chmod +x server.py
+python server.py
+```
 
 ---
 

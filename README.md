@@ -1,2 +1,4 @@
 # Local_Network
-A offline and online platform for play games and chat.
+🖥️A offline platform for chat and upload files with friends.
+enjoy✅
+🇮🇷🇮🇷🇮🇷

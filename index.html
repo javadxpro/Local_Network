@@ -1,0 +1,521 @@
+```html
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شبکه اشتراک محله</title>
+    <!-- استفاده از آیکون‌های Phosphor برای ظاهر مدرن‌تر -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* ================= متغیرها و استایل‌های پایه ================= */
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --danger: #ef4444;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255,255,255,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at top right, rgba(99,102,241,0.15), transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(99,102,241,0.05), transparent 40%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+
+        /* سیستم صفحات (SPA) */
+        .view { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .view.active { display: block; opacity: 1; animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ================= المان‌های مشترک ================= */
+        button { border: none; outline: none; cursor: pointer; transition: 0.2s; font-weight: 600; font-size: 14px; }
+        .btn-primary { background: var(--primary); color: white; padding: 12px 24px; border-radius: 12px; }
+        .btn-primary:hover { background: var(--primary-hover); box-shadow: 0 4px 15px rgba(99,102,241,0.3); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 8px 16px; border-radius: 8px; }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        
+        input {
+            width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+            border-radius: 12px; color: var(--text); font-size: 14px; transition: 0.2s;
+        }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+        /* ================= صفحه ورود ================= */
+        .auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .auth-card {
+            background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid var(--border);
+            padding: 40px; border-radius: 24px; width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .auth-card h2 { margin-bottom: 25px; font-size: 24px; font-weight: 800; }
+        .auth-card i { font-size: 48px; color: var(--primary); margin-bottom: 15px; }
+        .auth-card input { margin-bottom: 15px; }
+        .auth-card button { width: 100%; margin-bottom: 20px; }
+        .auth-toggle { color: var(--text-muted); font-size: 14px; cursor: pointer; }
+        .auth-toggle span { color: var(--primary); font-weight: 600; }
+
+        /* ================= پنل اصلی ================= */
+        .dashboard { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        
+        /* هدر */
+        header {
+            display: flex; justify-content: space-between; align-items: center; padding: 16px 24px;
+            background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid var(--border);
+            border-radius: 20px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;
+        }
+        .brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: white; }
+        .brand i { color: var(--primary); font-size: 28px; }
+        .user-menu { display: flex; align-items: center; gap: 15px; }
+        .user-badge { background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 12px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .user-badge i { color: var(--primary); }
+        
+        /* تب‌ها */
+        .tabs { display: flex; gap: 10px; margin-bottom: 25px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn {
+            background: rgba(255,255,255,0.05); color: var(--text-muted); padding: 12px 24px;
+            border-radius: 14px; display: flex; align-items: center; gap: 8px; border: 1px solid transparent;
+        }
+        .tab-btn.active { background: rgba(99,102,241,0.1); color: var(--primary); border-color: rgba(99,102,241,0.2); }
+        
+        /* محتوای تب‌ها */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+        /* ویدیوها */
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .video-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+            overflow: hidden; transition: 0.3s;
+        }
+        .video-card:hover { transform: translateY(-5px); border-color: rgba(99,102,241,0.4); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .video-card video { width: 100%; height: 200px; object-fit: cover; background: #000; }
+        .video-info { padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .video-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; }
+        .video-size { color: var(--text-muted); font-size: 12px; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; }
+
+        /* چت باکس */
+        .chat-container { max-width: 800px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; height: 600px; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .msg { max-width: 75%; display: flex; flex-direction: column; }
+        .msg-bubble { background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 16px 16px 0 16px; line-height: 1.5; font-size: 14px; word-wrap: break-word; }
+        .msg-user { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; padding: 0 4px; }
+        .msg.me { align-self: flex-end; }
+        .msg.me .msg-bubble { background: var(--primary); border-radius: 16px 16px 16px 0; }
+        .msg.me .msg-user { text-align: right; color: rgba(255,255,255,0.7); }
+        .chat-input { display: flex; gap: 10px; padding: 16px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border); }
+        
+        /* آپلود */
+        .upload-container { max-width: 600px; margin: 0 auto; }
+        .upload-zone {
+            border: 2px dashed rgba(99,102,241,0.4); border-radius: 24px; padding: 60px 20px; text-align: center;
+            background: rgba(99,102,241,0.02); cursor: pointer; transition: 0.3s;
+        }
+        .upload-zone:hover { background: rgba(99,102,241,0.05); border-color: var(--primary); }
+        .upload-zone i { font-size: 64px; color: var(--primary); margin-bottom: 15px; }
+        .upload-zone h3 { margin-bottom: 8px; }
+        .upload-zone p { color: var(--text-muted); font-size: 14px; }
+        .progress-box { display: none; margin-top: 20px; background: var(--surface); padding: 20px; border-radius: 16px; text-align: center; border: 1px solid var(--border); }
+        .spinner { display: inline-block; width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* ================= پنل ادمین ================= */
+        .admin-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .admin-header h2 { font-size: 24px; }
+        table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+        th, td { padding: 16px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: 600; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* نوتیفیکیشن (تُست) */
+        #toast {
+            position: fixed; bottom: 20px; right: 20px; background: var(--surface); border-left: 4px solid var(--primary);
+            padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex; align-items: center; gap: 12px; transform: translateX(120%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999;
+        }
+        #toast.show { transform: translateX(0); }
+
+        /* ریسپانسیو */
+        @media(max-width: 600px) {
+            header { flex-direction: column; }
+            .user-menu { width: 100%; justify-content: space-between; }
+            .chat-container { height: calc(100vh - 250px); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- تُست نوتیفیکیشن -->
+    <div id="toast"><i class="ph ph-info"></i> <span id="toast-msg">پیام</span></div>
+
+    <!-- ================= بخش ورود/ثبت نام ================= -->
+    <div id="view-login" class="view auth-container">
+        <div class="auth-card">
+            <i class="ph-fill ph-planet"></i>
+            <h2 id="auth-title">ورود به شبکه</h2>
+            <input type="text" id="username" placeholder="نام کاربری (حداقل ۳ حرف)" autocomplete="off">
+            <input type="password" id="password" placeholder="رمز عبور (حداقل ۴ حرف)">
+            <button class="btn-primary" id="auth-btn" onclick="handleAuth()">ورود به حساب</button>
+            <p class="auth-toggle" onclick="toggleAuthMode()">
+                حساب کاربری نداری؟ <span>ثبت نام کن</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- ================= پنل اصلی ================= -->
+    <div id="view-main" class="view dashboard">
+        <header>
+            <div class="brand">
+                <i class="ph-fill ph-planet"></i>
+                <span>شبکه محله</span>
+            </div>
+            <div class="user-menu">
+                <div class="user-badge">
+                    <i class="ph-fill ph-user-circle"></i>
+                    <span id="display-username">کاربر</span>
+                </div>
+                <button id="admin-btn" class="btn-primary" style="display: none; padding: 8px 16px;" onclick="switchView('admin')">
+                    <i class="ph-bold ph-shield-star"></i> ادمین
+                </button>
+                <button class="btn-danger" onclick="logout()">خروج</button>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('videos')"><i class="ph-bold ph-video-camera"></i> ویدیوها</button>
+            <button class="tab-btn" onclick="switchTab('chat')"><i class="ph-bold ph-chat-centered-text"></i> گپ و گفت</button>
+            <button class="tab-btn" onclick="switchTab('upload')"><i class="ph-bold ph-upload-simple"></i> آپلود فایل</button>
+        </div>
+
+        <!-- تب ویدیوها -->
+        <div id="tab-videos" class="tab-content active">
+            <div class="video-grid" id="video-grid">
+                <!-- ویدیوها اینجا لود میشن -->
+            </div>
+        </div>
+
+        <!-- تب چت -->
+        <div id="tab-chat" class="tab-content">
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <!-- پیام ها -->
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chat-inp" placeholder="پیامی بنویسید..." onkeypress="if(event.key==='Enter') sendMsg()">
+                    <button class="btn-primary" onclick="sendMsg()"><i class="ph-bold ph-paper-plane-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- تب آپلود -->
+        <div id="tab-upload" class="tab-content">
+            <div class="upload-container">
+                <div class="upload-zone" onclick="document.getElementById('file-inp').click()">
+                    <i class="ph-duotone ph-cloud-arrow-up"></i>
+                    <h3>برای انتخاب ویدیو کلیک کنید</h3>
+                    <p>پشتیبانی از MP4, MKV, AVI و WebM</p>
+                    <input type="file" id="file-inp" style="display:none;" accept="video/*" onchange="uploadFile()">
+                </div>
+                <div class="progress-box" id="upload-progress">
+                    <div class="spinner"></div>
+                    <h3 style="margin-bottom: 5px;">در حال آپلود...</h3>
+                    <p style="color: var(--text-muted); font-size: 14px;">لطفاً صفحه را نبندید.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ================= پنل ادمین ================= -->
+    <div id="view-admin" class="view dashboard">
+        <div class="admin-header">
+            <button class="btn-primary" style="padding: 10px; border-radius: 50%;" onclick="switchView('main')">
+                <i class="ph-bold ph-arrow-right"></i>
+            </button>
+            <h2>مدیریت کاربران سرور</h2>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>نام کاربری</th>
+                    <th>نقش</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody id="user-list">
+                <!-- لیست کاربران -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ================= اسکریپت‌ها ================= -->
+    <script>
+        let isLoginMode = true;
+        let currentUser = "";
+        let chatInterval = null;
+
+        // نمایش نوتیفیکیشن
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.style.borderLeftColor = isError ? 'var(--danger)' : 'var(--primary)';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        // سیستم روتر ساده (جابجایی بین صفحات)
+        function switchView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+            
+            if (viewId === 'main') {
+                switchTab('videos');
+            } else if (viewId === 'admin') {
+                loadUsers();
+            }
+        }
+
+        // جابجایی بین تب‌های پنل اصلی
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.currentTarget.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            if(chatInterval) clearInterval(chatInterval);
+
+            if(tabId === 'videos') loadVideos();
+            if(tabId === 'chat') {
+                loadMessages();
+                chatInterval = setInterval(loadMessages, 3000);
+            }
+        }
+
+        // بررسی وضعیت ورود
+        async function checkSession() {
+            try {
+                const res = await fetch('/api/session');
+                const data = await res.json();
+                if (data.authenticated) {
+                    currentUser = data.username;
+                    document.getElementById('display-username').innerText = currentUser;
+                    document.getElementById('admin-btn').style.display = data.is_admin ? 'flex' : 'none';
+                    switchView('main');
+                } else {
+                    switchView('login');
+                }
+            } catch (e) {
+                switchView('login');
+            }
+        }
+
+        // تغییر حالت فرم ورود/ثبت‌نام
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('auth-title').innerText = isLoginMode ? "ورود به شبکه" : "ساخت حساب جدید";
+            document.getElementById('auth-btn').innerText = isLoginMode ? "ورود به حساب" : "ثبت نام";
+            document.querySelector('.auth-toggle').innerHTML = isLoginMode ? 
+                "حساب کاربری نداری؟ <span>ثبت نام کن</span>" : "قبلاً ثبت نام کردی؟ <span>وارد شو</span>";
+        }
+
+        // انجام عملیات ورود یا ثبت‌نام
+        async function handleAuth() {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            if(!u || !p) return showToast('لطفا نام کاربری و رمز را وارد کنید', true);
+
+            const url = isLoginMode ? '/api/login' : '/api/register';
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: u, password: p})
+                });
+                const data = await res.json();
+                
+                if (res.ok || data.success) {
+                    if (isLoginMode) {
+                        document.cookie = "session=" + data.token + "; path=/; max-age=31536000";
+                        showToast('با موفقیت وارد شدید!');
+                        checkSession();
+                    } else {
+                        showToast('ثبت نام با موفقیت انجام شد. حالا وارد شوید.');
+                        toggleAuthMode();
+                        document.getElementById('password').value = '';
+                    }
+                } else {
+                    showToast(data.message || 'خطایی رخ داد', true);
+                }
+            } catch (e) {
+                showToast('خطا در ارتباط با سرور', true);
+            }
+        }
+
+        // خروج
+        async function logout() {
+            await fetch('/api/logout');
+            document.cookie = "session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            if(chatInterval) clearInterval(chatInterval);
+            switchView('login');
+        }
+
+        // لود کردن ویدیوها
+        async function loadVideos() {
+            const res = await fetch('/api/videos');
+            const data = await res.json();
+            const grid = document.getElementById('video-grid');
+            
+            if(data.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">هنوز ویدیویی آپلود نشده است.</p>';
+                return;
+            }
+
+            let html = '';
+            data.forEach(v => {
+                const mbSize = (v.size / (1024 * 1024)).toFixed(1);
+                html += `
+                    <div class="video-card">
+                        <video src="${v.url}" controls preload="metadata"></video>
+                        <div class="video-info">
+                            <span class="video-name" title="${v.name}">${v.name}</span>
+                            <span class="video-size">${mbSize} MB</span>
+                        </div>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        // لود کردن پیام‌ها
+        async function loadMessages() {
+            const res = await fetch('/api/messages');
+            const data = await res.json();
+            const box = document.getElementById('chat-messages');
+            
+            // بررسی اسکرول
+            const shouldScroll = box.scrollTop + box.clientHeight >= box.scrollHeight - 50;
+            
+            let html = '';
+            data.forEach(m => {
+                const isMe = m.user === currentUser;
+                html += `
+                    <div class="msg ${isMe ? 'me' : ''}">
+                        <span class="msg-user">${m.user}</span>
+                        <div class="msg-bubble">${m.text}</div>
+                    </div>
+                `;
+            });
+            
+            if (box.innerHTML !== html) {
+                box.innerHTML = html;
+                if(shouldScroll) box.scrollTop = box.scrollHeight;
+            }
+        }
+
+        // ارسال پیام
+        async function sendMsg() {
+            const inp = document.getElementById('chat-inp');
+            const text = inp.value.trim();
+            if(!text) return;
+            
+            inp.value = '';
+            await fetch('/api/send_message', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text})
+            });
+            loadMessages();
+            setTimeout(() => {
+                const box = document.getElementById('chat-messages');
+                box.scrollTop = box.scrollHeight;
+            }, 100);
+        }
+
+        // آپلود ویدیو
+        async function uploadFile() {
+            const fileInp = document.getElementById('file-inp');
+            const file = fileInp.files[0];
+            if(!file) return;
+
+            const fd = new FormData();
+            fd.append('video', file);
+            
+            document.querySelector('.upload-zone').style.display = 'none';
+            document.getElementById('upload-progress').style.display = 'block';
+
+            try {
+                const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                const data = await res.json();
+                
+                showToast(data.message, !data.success);
+                
+                if(data.success) {
+                    // شبیه سازی کلیک روی تب ویدیوها بعد از ۱ ثانیه
+                    setTimeout(() => document.querySelector('.tab-btn').click(), 1000);
+                }
+            } catch(e) {
+                showToast('خطا در آپلود فایل', true);
+            } finally {
+                fileInp.value = '';
+                document.querySelector('.upload-zone').style.display = 'block';
+                document.getElementById('upload-progress').style.display = 'none';
+            }
+        }
+
+        // مدیریت کاربران (ادمین)
+        async function loadUsers() {
+            const res = await fetch('/api/users');
+            if(!res.ok) return showToast('عدم دسترسی', true);
+            const data = await res.json();
+            
+            let html = '';
+            data.users.forEach(u => {
+                const isAdmin = u.role === 'admin';
+                const roleBadge = isAdmin ? 
+                    '<span style="color:#fbbf24; background:rgba(251,191,36,0.1); padding:4px 8px; border-radius:6px;">مدیر</span>' : 
+                    '<span style="color:var(--text-muted);">کاربر</span>';
+                
+                let actionBtn = '-';
+                if(!isAdmin) {
+                    actionBtn = `<button class="btn-danger" onclick="deleteUser('${u.username}')"><i class="ph-bold ph-trash"></i> حذف</button>`;
+                }
+
+                html += `
+                    <tr>
+                        <td style="font-weight:bold;">${u.username}</td>
+                        <td>${roleBadge}</td>
+                        <td>${actionBtn}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('user-list').innerHTML = html;
+        }
+
+        async function deleteUser(username) {
+            if(!confirm(`آیا از حذف کاربر ${username} مطمئن هستید؟`)) return;
+            
+            await fetch('/api/delete_user', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username})
+            });
+            showToast('کاربر حذف شد');
+            loadUsers();
+        }
+
+        // اجرای اولیه
+        window.onload = checkSession;
+    </script>
+</body>
+</html>
+
+```
